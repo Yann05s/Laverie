@@ -7,10 +7,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholde
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// prenom/chambre ne sont jamais lus depuis la liste publique des réservations
+// (voir fetchReservations) : seule la personne qui réserve les connaît.
 export interface Reservation {
   id: string;
-  prenom: string;
-  chambre: string;
   slot_start: string;
   slot_end: string;
   avec_lessive: boolean;

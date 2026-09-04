@@ -52,9 +52,11 @@ function Planning() {
     const from = days[0].toISOString();
     const to = new Date(days[days.length - 1]);
     to.setDate(to.getDate() + 1);
+    // On ne récupère volontairement ni le prénom ni la chambre : cette liste
+    // est publique, personne ne doit pouvoir lire qui a réservé quoi.
     const { data, error } = await supabase
       .from("reservations")
-      .select("*")
+      .select("id, slot_start, slot_end, avec_lessive, prix, created_at")
       .gte("slot_start", from)
       .lt("slot_start", to.toISOString())
       .order("slot_start", { ascending: true });
@@ -146,8 +148,7 @@ function Planning() {
                     </p>
                     {res ? (
                       <p className="mt-0.5 text-xs text-zinc-500">
-                        Réservé par {res.prenom} (chambre {res.chambre}) ·{" "}
-                        {res.avec_lessive ? "avec lessive" : "sans lessive"} ·{" "}
+                        Réservé · {res.avec_lessive ? "avec lessive" : "sans lessive"} ·{" "}
                         {res.prix.toFixed(2)} €
                       </p>
                     ) : (
