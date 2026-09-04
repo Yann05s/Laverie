@@ -204,7 +204,7 @@ function Planning() {
       {cancelTarget && (
         <CancelModal
           reservation={cancelTarget}
-          defaultCode={identity.code}
+          identity={identity}
           onClose={() => setCancelTarget(null)}
           onCancelled={() => {
             setCancelTarget(null);
@@ -363,16 +363,18 @@ function ReservationModal({
 
 function CancelModal({
   reservation,
-  defaultCode,
+  identity,
   onClose,
   onCancelled,
 }: {
   reservation: Reservation;
-  defaultCode: string;
+  identity: Identity;
   onClose: () => void;
   onCancelled: () => void;
 }) {
-  const [code, setCode] = useState(defaultCode);
+  const [prenom, setPrenom] = useState(identity.prenom);
+  const [chambre, setChambre] = useState(identity.chambre);
+  const [code, setCode] = useState(identity.code);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -380,19 +382,21 @@ function CancelModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!codeValide) return;
+    if (!prenom.trim() || !chambre.trim() || !codeValide) return;
     setSubmitting(true);
     setError(null);
 
     const { data, error } = await supabase.rpc("cancel_reservation", {
       p_id: reservation.id,
+      p_prenom: prenom.trim(),
+      p_chambre: chambre.trim(),
       p_code: code,
     });
 
     setSubmitting(false);
 
     if (error || !data) {
-      setError("Code incorrect pour cette réservation.");
+      setError("Prénom, chambre ou code incorrects pour cette réservation.");
       return;
     }
 
@@ -410,12 +414,30 @@ function CancelModal({
           {formatTimeRange(new Date(reservation.slot_start), new Date(reservation.slot_end))}
         </p>
         <p className="mt-1 text-xs text-zinc-500">
-          Entre le code à 3 chiffres choisi lors de la réservation.
+          Confirme ton prénom, ta chambre et ton code pour annuler.
         </p>
 
-        <label className="mt-4 block text-xs font-medium text-zinc-500">Code</label>
+        <label className="mt-4 block text-xs font-medium text-zinc-500">Prénom</label>
         <input
           autoFocus
+          value={prenom}
+          onChange={(e) => setPrenom(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          required
+        />
+
+        <label className="mt-3 block text-xs font-medium text-zinc-500">
+          Chambre / appart
+        </label>
+        <input
+          value={chambre}
+          onChange={(e) => setChambre(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          required
+        />
+
+        <label className="mt-3 block text-xs font-medium text-zinc-500">Code</label>
+        <input
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 3))}
           inputMode="numeric"

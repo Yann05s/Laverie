@@ -22,11 +22,14 @@ create table public.reservations (
 create index reservations_slot_start_idx on public.reservations (slot_start);
 
 -- ------------------------------------------------------------
--- Annulation sécurisée : ne supprime que si le code à 3 chiffres
--- correspond à la réservation.
+-- Annulation sécurisée : ne supprime que si le prénom, la chambre
+-- ET le code à 3 chiffres correspondent tous les trois à la
+-- réservation.
 -- ------------------------------------------------------------
 create or replace function public.cancel_reservation(
   p_id uuid,
+  p_prenom text,
+  p_chambre text,
   p_code text
 )
 returns boolean
@@ -39,6 +42,8 @@ declare
 begin
   delete from public.reservations
   where id = p_id
+    and lower(trim(prenom)) = lower(trim(p_prenom))
+    and lower(trim(chambre)) = lower(trim(p_chambre))
     and code = trim(p_code);
 
   get diagnostics deleted_count = row_count;
@@ -46,7 +51,7 @@ begin
 end;
 $$;
 
-grant execute on function public.cancel_reservation(uuid, text) to anon;
+grant execute on function public.cancel_reservation(uuid, text, text, text) to anon;
 
 -- ------------------------------------------------------------
 -- Row Level Security
