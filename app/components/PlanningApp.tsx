@@ -402,18 +402,22 @@ function CancelModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const codeValide = /^\d{3}$/.test(code);
+  // Code perso (3 chiffres) ou code maître (6 chiffres, connu de vous
+  // seuls) qui annule sans avoir besoin du bon prénom/chambre. Le code
+  // maître lui-même n'existe nulle part dans ce fichier : il n'est vérifié
+  // que côté base de données (fonction cancel_reservation).
+  const codeValide = /^\d{3}$/.test(code) || /^\d{6}$/.test(code);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!prenom.trim() || !chambre.trim() || !codeValide) return;
+    if (!codeValide) return;
     setSubmitting(true);
     setError(null);
 
     const { data, error } = await supabase.rpc("cancel_reservation", {
       p_id: reservation.id,
-      p_prenom: prenom.trim(),
-      p_chambre: chambre.trim(),
+      p_prenom: prenom.trim() || "-",
+      p_chambre: chambre.trim() || "-",
       p_code: code,
     });
 
@@ -441,33 +445,32 @@ function CancelModal({
           Confirme ton prénom, ta chambre et ton code pour annuler.
         </p>
 
-        <label className="mt-4 block text-xs font-medium text-neutral-500">Prénom</label>
+        <label className="mt-4 block text-xs font-medium text-neutral-500">
+          Prénom <span className="text-neutral-400">(optionnel avec le code maître)</span>
+        </label>
         <input
           autoFocus
           value={prenom}
           onChange={(e) => setPrenom(e.target.value)}
           className="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
-          required
         />
 
         <label className="mt-3 block text-xs font-medium text-neutral-500">
-          Chambre / appart
+          Chambre / appart <span className="text-neutral-400">(optionnel avec le code maître)</span>
         </label>
         <input
           value={chambre}
           onChange={(e) => setChambre(e.target.value)}
           className="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
-          required
         />
 
         <label className="mt-3 block text-xs font-medium text-neutral-500">Code</label>
         <input
           value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 3))}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
           inputMode="numeric"
-          pattern="[0-9]{3}"
-          maxLength={3}
-          placeholder="ex. 427"
+          maxLength={6}
+          placeholder="ton code (3 chiffres) ou le code maître (6 chiffres)"
           className="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           required
         />

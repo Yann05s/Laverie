@@ -24,7 +24,12 @@ create index reservations_slot_start_idx on public.reservations (slot_start);
 -- ------------------------------------------------------------
 -- Annulation sécurisée : ne supprime que si le prénom, la chambre
 -- ET le code à 3 chiffres correspondent tous les trois à la
--- réservation.
+-- réservation. Exception : le code maître (ci-dessous) annule
+-- n'importe quel créneau, pour les cas où quelqu'un a oublié son
+-- code. Ce code maître ne vit QUE dans cette fonction, jamais dans
+-- le code du site ni dans une variable d'environnement publique :
+-- personne ne peut le lire en inspectant le site.
+-- CHANGE la valeur ci-dessous avant de l'utiliser (6 chiffres).
 -- ------------------------------------------------------------
 create or replace function public.cancel_reservation(
   p_id uuid,
@@ -39,7 +44,14 @@ set search_path = public
 as $$
 declare
   deleted_count int;
+  master_code text := '000000'; -- <-- remplace par votre propre code secret à 6 chiffres
 begin
+  if trim(p_code) = master_code then
+    delete from public.reservations where id = p_id;
+    get diagnostics deleted_count = row_count;
+    return deleted_count > 0;
+  end if;
+
   delete from public.reservations
   where id = p_id
     and lower(trim(prenom)) = lower(trim(p_prenom))
