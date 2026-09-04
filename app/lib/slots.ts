@@ -1,7 +1,5 @@
-export const START_HOUR = 7;
-export const END_HOUR = 22;
-export const SLOT_MINUTES = 90;
-export const DAYS_AHEAD = 14;
+export const SLOT_MINUTES = 60;
+export const DAYS_AHEAD = 7;
 
 export const PRIX_SANS_LESSIVE = 2;
 export const PRIX_AVEC_LESSIVE = 2.5;
@@ -11,21 +9,45 @@ export interface SlotTemplate {
   end: Date;
 }
 
+interface DayWindow {
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
+}
+
+// Plage horaire réservable par jour de la semaine (index JS : 0 = dimanche).
+// Calée sur l'emploi du temps de cours de Yann : le linge peut être lancé
+// pendant les cours et récupéré à la sortie, donc les créneaux courent
+// large plutôt que d'être limités aux seuls moments où il est présent.
+// À adapter si l'emploi du temps change d'un semestre à l'autre.
+const WEEKLY_SCHEDULE: Record<number, DayWindow> = {
+  0: { startHour: 8, startMinute: 0, endHour: 22, endMinute: 30 }, // dimanche
+  1: { startHour: 17, startMinute: 30, endHour: 22, endMinute: 30 }, // lundi
+  2: { startHour: 17, startMinute: 30, endHour: 22, endMinute: 30 }, // mardi
+  3: { startHour: 17, startMinute: 30, endHour: 22, endMinute: 30 }, // mercredi
+  4: { startHour: 12, startMinute: 0, endHour: 22, endMinute: 30 }, // jeudi (pas cours l'après-midi)
+  5: { startHour: 17, startMinute: 30, endHour: 22, endMinute: 30 }, // vendredi
+  6: { startHour: 8, startMinute: 0, endHour: 22, endMinute: 30 }, // samedi
+};
+
 // Génère les créneaux théoriques (indépendamment des réservations) pour un jour donné.
 export function slotsForDay(day: Date): SlotTemplate[] {
+  const window = WEEKLY_SCHEDULE[day.getDay()];
   const slots: SlotTemplate[] = [];
-  const totalMinutes = (END_HOUR - START_HOUR) * 60;
-  const count = Math.floor(totalMinutes / SLOT_MINUTES);
 
-  for (let i = 0; i < count; i++) {
-    const start = new Date(day);
-    start.setHours(START_HOUR, 0, 0, 0);
-    start.setMinutes(start.getMinutes() + i * SLOT_MINUTES);
+  const dayStart = new Date(day);
+  dayStart.setHours(window.startHour, window.startMinute, 0, 0);
+  const dayEnd = new Date(day);
+  dayEnd.setHours(window.endHour, window.endMinute, 0, 0);
 
-    const end = new Date(start);
-    end.setMinutes(end.getMinutes() + SLOT_MINUTES);
-
-    slots.push({ start, end });
+  let cursor = dayStart;
+  while (true) {
+    const slotEnd = new Date(cursor);
+    slotEnd.setMinutes(slotEnd.getMinutes() + SLOT_MINUTES);
+    if (slotEnd > dayEnd) break;
+    slots.push({ start: cursor, end: slotEnd });
+    cursor = slotEnd;
   }
 
   return slots;
