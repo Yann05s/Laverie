@@ -42,13 +42,15 @@ export default function AccessGate({ children }: { children: React.ReactNode }) 
   if (unlocked) return <>{children}</>;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-6">
+    <div className="flex min-h-screen items-center justify-center bg-surface px-6">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
+        className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
       >
-        <h1 className="text-lg font-semibold text-zinc-900">Accès résidence</h1>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h1 className="flex items-center gap-2 text-lg font-semibold text-ink">
+          <span>🧺</span> Accès résidence
+        </h1>
+        <p className="mt-1 text-sm text-slate-600">
           Entre le code communiqué dans la résidence pour accéder au planning.
         </p>
         <input
@@ -56,14 +58,14 @@ export default function AccessGate({ children }: { children: React.ReactNode }) 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Code d'accès"
-          className="mt-4 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          className="mt-4 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
         />
         {error && (
           <p className="mt-2 text-sm text-red-600">Code incorrect, réessaie.</p>
         )}
         <button
           type="submit"
-          className="mt-4 w-full rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700"
+          className="mt-4 w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
         >
           Valider
         </button>

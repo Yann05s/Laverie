@@ -97,15 +97,27 @@ function Planning() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="min-h-screen bg-surface text-ink">
       <main className="mx-auto max-w-2xl px-6 py-10">
         <header className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">Laverie de la résidence</h1>
-          <p className="mt-2 text-sm text-zinc-600">
-            Réservez votre créneau : <strong>{PRIX_SANS_LESSIVE.toFixed(2)} €</strong> sans lessive,{" "}
-            <strong>{PRIX_AVEC_LESSIVE.toFixed(2)} €</strong> lessive fournie. La laverie de la
-            résidence facture 3,60 € le cycle. Paiement à la main lors du créneau.
-          </p>
+          <div className="flex items-center gap-2.5">
+            <span className="text-3xl">🧺</span>
+            <h1 className="text-3xl font-bold tracking-tight text-ink">Laverie de la résidence</h1>
+          </div>
+          <p className="mt-1 text-sm font-medium text-brand">Moins cher, plus proche.</p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+            <span className="rounded-full bg-white px-3 py-1 text-slate-400 ring-1 ring-slate-200 line-through">
+              3,60 €
+            </span>
+            <span className="rounded-full bg-brand px-3 py-1 font-semibold text-white">
+              {PRIX_SANS_LESSIVE.toFixed(2)} € sans lessive
+            </span>
+            <span className="rounded-full bg-teal px-3 py-1 font-semibold text-white">
+              {PRIX_AVEC_LESSIVE.toFixed(2)} € avec lessive
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">Paiement à la main lors du créneau.</p>
         </header>
 
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
@@ -115,8 +127,8 @@ function Planning() {
               onClick={() => setSelectedDayIndex(i)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 i === selectedDayIndex
-                  ? "bg-zinc-900 text-white"
-                  : "bg-white text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                  ? "bg-brand text-white shadow-sm shadow-brand/30"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-blue-50"
               }`}
             >
               {i === 0 ? "Aujourd'hui" : formatDayLabel(day)}
@@ -124,10 +136,10 @@ function Planning() {
           ))}
         </div>
 
-        <h2 className="mb-3 text-sm font-medium text-zinc-500">{formatDayLabel(selectedDay)}</h2>
+        <h2 className="mb-3 text-sm font-medium text-slate-500">{formatDayLabel(selectedDay)}</h2>
 
         {loading ? (
-          <p className="text-sm text-zinc-500">Chargement du planning...</p>
+          <p className="text-sm text-slate-500">Chargement du planning...</p>
         ) : (
           <div className="space-y-2">
             {daySlots.map((slot, i) => {
@@ -137,25 +149,25 @@ function Planning() {
               return (
                 <div
                   key={i}
-                  className={`flex items-center justify-between rounded-xl border p-4 ${
+                  className={`flex items-center justify-between rounded-xl border-l-4 border-y border-r p-4 ${
                     res
-                      ? "border-zinc-200 bg-zinc-100"
+                      ? "border-y-teal/20 border-r-teal/20 border-l-teal bg-teal/5"
                       : isPast
-                        ? "border-zinc-100 bg-zinc-50"
-                        : "border-zinc-200 bg-white"
+                        ? "border-y-slate-100 border-r-slate-100 border-l-slate-200 bg-slate-50"
+                        : "border-y-slate-200 border-r-slate-200 border-l-brand bg-white"
                   }`}
                 >
                   <div>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-semibold text-ink">
                       {formatTimeRange(slot.start, slot.end)}
                     </p>
                     {res ? (
-                      <p className="mt-0.5 text-xs text-zinc-500">
+                      <p className="mt-0.5 text-xs text-teal">
                         Réservé · {res.avec_lessive ? "avec lessive" : "sans lessive"} ·{" "}
                         {res.prix.toFixed(2)} €
                       </p>
                     ) : (
-                      <p className="mt-0.5 text-xs text-zinc-400">
+                      <p className="mt-0.5 text-xs text-slate-400">
                         {isPast ? "Passé" : "Libre"}
                       </p>
                     )}
@@ -164,14 +176,14 @@ function Planning() {
                   {res ? (
                     <button
                       onClick={() => setCancelTarget(res)}
-                      className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-white"
+                      className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white"
                     >
                       Annuler
                     </button>
                   ) : !isPast ? (
                     <button
                       onClick={() => setModalSlot(slot)}
-                      className="shrink-0 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700"
+                      className="shrink-0 rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-dark"
                     >
                       Réserver
                     </button>
@@ -182,7 +194,7 @@ function Planning() {
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs text-zinc-400">
+        <p className="mt-8 text-center text-xs text-slate-400">
           Planning affiché pour les {DAYS_AHEAD} prochains jours.
         </p>
       </main>
@@ -268,36 +280,38 @@ function ReservationModal({
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40 px-6">
+    <div className="fixed inset-0 flex items-center justify-center bg-ink/40 px-6">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
       >
-        <h2 className="text-lg font-semibold">Réserver ce créneau</h2>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
+          <span>🧺</span> Réserver ce créneau
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
           {formatTimeRange(slot.start, slot.end)}
         </p>
 
-        <label className="mt-4 block text-xs font-medium text-zinc-500">Prénom</label>
+        <label className="mt-4 block text-xs font-medium text-slate-500">Prénom</label>
         <input
           autoFocus
           value={prenom}
           onChange={(e) => setPrenom(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           required
         />
 
-        <label className="mt-3 block text-xs font-medium text-zinc-500">
+        <label className="mt-3 block text-xs font-medium text-slate-500">
           Chambre / appart
         </label>
         <input
           value={chambre}
           onChange={(e) => setChambre(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           required
         />
 
-        <label className="mt-3 block text-xs font-medium text-zinc-500">
+        <label className="mt-3 block text-xs font-medium text-slate-500">
           Code à 3 chiffres (à retenir pour annuler)
         </label>
         <input
@@ -307,32 +321,42 @@ function ReservationModal({
           pattern="[0-9]{3}"
           maxLength={3}
           placeholder="ex. 427"
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           required
         />
 
         <div className="mt-4 space-y-2">
-          <label className="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 text-sm">
-            <span>Sans lessive</span>
+          <label
+            className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-sm transition-colors ${
+              !avecLessive ? "border-brand bg-blue-50" : "border-slate-200"
+            }`}
+          >
+            <span className="font-medium text-ink">💧 Sans lessive</span>
             <span className="flex items-center gap-2">
-              <span className="text-zinc-500">{PRIX_SANS_LESSIVE.toFixed(2)} €</span>
+              <span className="text-slate-500">{PRIX_SANS_LESSIVE.toFixed(2)} €</span>
               <input
                 type="radio"
                 name="lessive"
                 checked={!avecLessive}
                 onChange={() => setAvecLessive(false)}
+                className="accent-brand"
               />
             </span>
           </label>
-          <label className="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 text-sm">
-            <span>Avec lessive fournie</span>
+          <label
+            className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-sm transition-colors ${
+              avecLessive ? "border-teal bg-teal/10" : "border-slate-200"
+            }`}
+          >
+            <span className="font-medium text-ink">🧴 Avec lessive fournie</span>
             <span className="flex items-center gap-2">
-              <span className="text-zinc-500">{PRIX_AVEC_LESSIVE.toFixed(2)} €</span>
+              <span className="text-slate-500">{PRIX_AVEC_LESSIVE.toFixed(2)} €</span>
               <input
                 type="radio"
                 name="lessive"
                 checked={avecLessive}
                 onChange={() => setAvecLessive(true)}
+                className="accent-teal"
               />
             </span>
           </label>
@@ -344,14 +368,14 @@ function ReservationModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Annuler
           </button>
           <button
             type="submit"
             disabled={submitting || !codeValide}
-            className="flex-1 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 disabled:bg-zinc-300"
+            className="flex-1 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:bg-slate-300"
           >
             {submitting ? "..." : `Confirmer (${prix.toFixed(2)} €)`}
           </button>
@@ -404,39 +428,39 @@ function CancelModal({
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40 px-6">
+    <div className="fixed inset-0 flex items-center justify-center bg-ink/40 px-6">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
       >
-        <h2 className="text-lg font-semibold">Annuler la réservation</h2>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h2 className="text-lg font-semibold text-ink">Annuler la réservation</h2>
+        <p className="mt-1 text-sm text-slate-600">
           {formatTimeRange(new Date(reservation.slot_start), new Date(reservation.slot_end))}
         </p>
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="mt-1 text-xs text-slate-500">
           Confirme ton prénom, ta chambre et ton code pour annuler.
         </p>
 
-        <label className="mt-4 block text-xs font-medium text-zinc-500">Prénom</label>
+        <label className="mt-4 block text-xs font-medium text-slate-500">Prénom</label>
         <input
           autoFocus
           value={prenom}
           onChange={(e) => setPrenom(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           required
         />
 
-        <label className="mt-3 block text-xs font-medium text-zinc-500">
+        <label className="mt-3 block text-xs font-medium text-slate-500">
           Chambre / appart
         </label>
         <input
           value={chambre}
           onChange={(e) => setChambre(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           required
         />
 
-        <label className="mt-3 block text-xs font-medium text-zinc-500">Code</label>
+        <label className="mt-3 block text-xs font-medium text-slate-500">Code</label>
         <input
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 3))}
@@ -444,7 +468,7 @@ function CancelModal({
           pattern="[0-9]{3}"
           maxLength={3}
           placeholder="ex. 427"
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           required
         />
 
@@ -454,7 +478,7 @@ function CancelModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Retour
           </button>
