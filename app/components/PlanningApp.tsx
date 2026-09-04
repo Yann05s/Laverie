@@ -18,15 +18,18 @@ const IDENTITY_KEY = "laverie_identity";
 interface Identity {
   prenom: string;
   chambre: string;
+  code: string;
 }
 
+const EMPTY_IDENTITY: Identity = { prenom: "", chambre: "", code: "" };
+
 function loadIdentity(): Identity {
-  if (typeof window === "undefined") return { prenom: "", chambre: "" };
+  if (typeof window === "undefined") return EMPTY_IDENTITY;
   try {
     const raw = localStorage.getItem(IDENTITY_KEY);
-    return raw ? JSON.parse(raw) : { prenom: "", chambre: "" };
+    return raw ? { ...EMPTY_IDENTITY, ...JSON.parse(raw) } : EMPTY_IDENTITY;
   } catch {
-    return { prenom: "", chambre: "" };
+    return EMPTY_IDENTITY;
   }
 }
 
@@ -201,6 +204,7 @@ function Planning() {
       {cancelTarget && (
         <CancelModal
           reservation={cancelTarget}
+          defaultCode={identity.code}
           onClose={() => setCancelTarget(null)}
           onCancelled={() => {
             setCancelTarget(null);
@@ -225,21 +229,24 @@ function ReservationModal({
 }) {
   const [prenom, setPrenom] = useState(identity.prenom);
   const [chambre, setChambre] = useState(identity.chambre);
+  const [code, setCode] = useState(identity.code);
   const [avecLessive, setAvecLessive] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const prix = avecLessive ? PRIX_AVEC_LESSIVE : PRIX_SANS_LESSIVE;
+  const codeValide = /^\d{3}$/.test(code);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!prenom.trim() || !chambre.trim()) return;
+    if (!prenom.trim() || !chambre.trim() || !codeValide) return;
     setSubmitting(true);
     setError(null);
 
     const { error } = await supabase.from("reservations").insert({
       prenom: prenom.trim(),
       chambre: chambre.trim(),
+      code,
       slot_start: slot.start.toISOString(),
       slot_end: slot.end.toISOString(),
       avec_lessive: avecLessive,
@@ -257,7 +264,7 @@ function ReservationModal({
       return;
     }
 
-    onBooked({ prenom: prenom.trim(), chambre: chambre.trim() });
+    onBooked({ prenom: prenom.trim(), chambre: chambre.trim(), code });
   }
 
   return (
@@ -286,6 +293,20 @@ function ReservationModal({
         <input
           value={chambre}
           onChange={(e) => setChambre(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+          required
+        />
+
+        <label className="mt-3 block text-xs font-medium text-zinc-500">
+          Code à 3 chiffres (à retenir pour annuler)
+        </label>
+        <input
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 3))}
+          inputMode="numeric"
+          pattern="[0-9]{3}"
+          maxLength={3}
+          placeholder="ex. 427"
           className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
           required
         />
@@ -329,7 +350,7 @@ function ReservationModal({
           </button>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !codeValide}
             className="flex-1 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 disabled:bg-zinc-300"
           >
             {submitting ? "..." : `Confirmer (${prix.toFixed(2)} €)`}
@@ -342,33 +363,36 @@ function ReservationModal({
 
 function CancelModal({
   reservation,
+  defaultCode,
   onClose,
   onCancelled,
 }: {
   reservation: Reservation;
+  defaultCode: string;
   onClose: () => void;
   onCancelled: () => void;
 }) {
-  const [prenom, setPrenom] = useState("");
-  const [chambre, setChambre] = useState("");
+  const [code, setCode] = useState(defaultCode);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const codeValide = /^\d{3}$/.test(code);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!codeValide) return;
     setSubmitting(true);
     setError(null);
 
     const { data, error } = await supabase.rpc("cancel_reservation", {
       p_id: reservation.id,
-      p_prenom: prenom.trim(),
-      p_chambre: chambre.trim(),
+      p_code: code,
     });
 
     setSubmitting(false);
 
     if (error || !data) {
-      setError("Prénom / chambre ne correspondent pas à cette réservation.");
+      setError("Code incorrect pour cette réservation.");
       return;
     }
 
@@ -386,24 +410,18 @@ function CancelModal({
           {formatTimeRange(new Date(reservation.slot_start), new Date(reservation.slot_end))}
         </p>
         <p className="mt-1 text-xs text-zinc-500">
-          Confirmez votre prénom et votre chambre pour annuler.
+          Entre le code à 3 chiffres choisi lors de la réservation.
         </p>
 
-        <label className="mt-4 block text-xs font-medium text-zinc-500">Prénom</label>
+        <label className="mt-4 block text-xs font-medium text-zinc-500">Code</label>
         <input
           autoFocus
-          value={prenom}
-          onChange={(e) => setPrenom(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
-          required
-        />
-
-        <label className="mt-3 block text-xs font-medium text-zinc-500">
-          Chambre / appart
-        </label>
-        <input
-          value={chambre}
-          onChange={(e) => setChambre(e.target.value)}
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 3))}
+          inputMode="numeric"
+          pattern="[0-9]{3}"
+          maxLength={3}
+          placeholder="ex. 427"
           className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
           required
         />
@@ -420,7 +438,7 @@ function CancelModal({
           </button>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !codeValide}
             className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:bg-red-300"
           >
             {submitting ? "..." : "Confirmer l'annulation"}
