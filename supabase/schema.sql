@@ -67,6 +67,12 @@ create policy "reservation possible pour un creneau futur"
 -- Pas de delete/update direct : uniquement via cancel_reservation() ci-dessus
 -- (aucune policy delete/update = interdit par défaut avec RLS activé)
 
+-- ------------------------------------------------------------
+-- Temps réel : tout le monde voit les réservations se mettre à
+-- jour en direct sans recharger la page.
+-- ------------------------------------------------------------
+alter publication supabase_realtime add table public.reservations;
+
 -- ============================================================
 -- Fin. Pense à copier l'URL du projet et la clé "anon public"
 -- (Project Settings > API) dans le fichier .env.local du site.
